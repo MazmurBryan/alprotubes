@@ -192,42 +192,70 @@ func tambahListPelatihan() {
 func rankingNilai() {
 	fmt.Printf("------------------------------------------------------------\n                        RANKING NILAI\n------------------------------------------------------------\n")
 
-	// Buat array untuk menyimpan data peserta dan nilainya
-	var ranking [NMAX]struct {
-		email string
-		nilai int
-	}
+	// 1. Buat map untuk menyimpan ranking nilai berdasarkan pelatihan
+	rankingPelatihan := make(map[string][]Pendaftaran)
 
-	// Copy data peserta dan nilainya ke array ranking
+	// 2. Urutkan data pendaftaran berdasarkan pelatihan dan nilai
 	for i := 0; i < jumlahPendaftaran; i++ {
-		ranking[i].email = pendaftaran[i].email
-		ranking[i].nilai = pendaftaran[i].nilai
+		pelatihan := pendaftaran[i].pelatihan
+		rankingPelatihan[pelatihan] = append(rankingPelatihan[pelatihan], pendaftaran[i])
 	}
 
-	// Urutkan array ranking menggunakan insertion sort
-	for i := 1; i < jumlahPendaftaran; i++ {
-		key := ranking[i]
-		j := i - 1
-		for j >= 0 && ranking[j].nilai < key.nilai {
-			ranking[j+1] = ranking[j]
-			j--
+	// 3. Tampilkan ranking nilai untuk setiap pelatihan
+	for pelatihan, peserta := range rankingPelatihan {
+		// 3.1. Urutkan peserta berdasarkan nilai menggunakan Selection Sort
+		n := len(peserta)
+		for i := 0; i < n-1; i++ {
+			minIndex := i
+			for j := i + 1; j < n; j++ {
+				if peserta[j].nilai > peserta[minIndex].nilai {
+					minIndex = j
+				}
+			}
+
+			// Tukar data pada index i dengan index minIndex
+			peserta[i], peserta[minIndex] = peserta[minIndex], peserta[i]
 		}
-		ranking[j+1] = key
-	}
 
-	// Tampilkan ranking nilai
-	for i := 0; i < jumlahPendaftaran; i++ {
-		fmt.Printf("Rank %d: %s - Nilai: %d\n", i+1, ranking[i].email, ranking[i].nilai)
+		// 3.2. Tampilkan ranking nilai untuk pelatihan
+		fmt.Printf("\nRanking Nilai untuk %s:\n", pelatihan)
+		for rank, p := range peserta {
+			fmt.Printf("Rank %d: %s - Nilai: %d\n", rank+1, p.email, p.nilai)
+		}
 	}
 
 	adminMenu() // Kembali ke menu admin setelah menampilkan ranking nilai
 }
-
 func daftarKelulusan() {
 	fmt.Printf("------------------------------------------------------------\n                        DAFTAR KELULUSAN\n------------------------------------------------------------\n")
+
+	// 1. Salin data pendaftaran ke array sementara (manual)
+	var tempPendaftaran [NMAX]Pendaftaran
 	for i := 0; i < jumlahPendaftaran; i++ {
-		if pendaftaran[i].status == "Lulus" {
-			fmt.Printf("\nNo. %d\nID: %d\nNama: %s\nStatus: %s\n", i+1, pendaftaran[i].id, pendaftaran[i].nama, pendaftaran[i].status)
+		tempPendaftaran[i] = pendaftaran[i]
+	}
+
+	// 2. Lakukan Selection Sort berdasarkan huruf depan nama
+	n := jumlahPendaftaran
+	for i := 0; i < n-1; i++ {
+		minIndex := i
+		for j := i + 1; j < n; j++ {
+			// Bandingkan huruf depan nama (case-insensitive)
+			if strings.ToLower(string(tempPendaftaran[j].nama[0])) < strings.ToLower(string(tempPendaftaran[minIndex].nama[0])) {
+				minIndex = j
+			}
+		}
+
+		// Tukar data pada index i dengan index minIndex (manual)
+		temp := tempPendaftaran[i]
+		tempPendaftaran[i] = tempPendaftaran[minIndex]
+		tempPendaftaran[minIndex] = temp
+	}
+
+	// 3. Tampilkan data kelulusan yang sudah terurut
+	for i := 0; i < jumlahPendaftaran; i++ {
+		if tempPendaftaran[i].status == "Lulus" {
+			fmt.Printf("\nNo. %d\nID: %d\nNama: %s\nStatus: %s\n", i+1, tempPendaftaran[i].id, tempPendaftaran[i].nama, tempPendaftaran[i].status)
 		}
 	}
 
@@ -490,7 +518,7 @@ func status() {
 				if pelatihan[j].nama != "" && pelatihan[j].nama == pendaftaran[i].pelatihan {
 					fmt.Printf("%s\n", pelatihan[j].nama)
 
-					break
+					j = jumlahPelatihan
 				}
 			}
 
