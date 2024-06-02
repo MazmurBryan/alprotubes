@@ -8,7 +8,7 @@ import (
 const NMAX = 100
 
 type TabdaftarAwal struct {
-	nama, email, pass, noTelp string
+	nama, email, pass string
 }
 
 type DaftarUser [NMAX]TabdaftarAwal
@@ -26,7 +26,8 @@ type Pendaftaran struct {
 	pekerjaan       string
 	alasanMengikuti string
 	nilai           int
-	status          string // "Lulus" or "Tidak Lulus"
+	status          string // "Lulus" or "Gagal"
+	pelatihan       string // Nama pelatihan yang diikuti
 }
 
 var data DaftarUser               // Global data array
@@ -62,7 +63,7 @@ func menuUtama() {
 
 func adminMenu() {
 	var nomorMenu int
-	fmt.Printf("------------------------------------------------------------\n                        MENU ADMIN\n------------------------------------------------------------\n1. TAMPILKAN DATA PESERTA\n2. TAMBAH LIST PELATIHAN\n3. LIHAT PENDAFTARAN\n4. RANKING NILAI\n5. DAFTAR KELULUSAN\n6. UBAH DATA PESERTA\n7. HAPUS DATA PESERTA\n8. KEMBALI KE MENU UTAMA\n\n")
+	fmt.Printf("------------------------------------------------------------\n                        MENU ADMIN\n------------------------------------------------------------\n1. DATA PESERTA\n2. PELATIHAN\n3. PENDAFTARAN PELATIHAN\n4. RANKING NILAI\n5. DAFTAR KELULUSAN\n6. KEMBALI KE MENU UTAMA\n\n")
 	fmt.Print("PILIH NOMOR : ")
 	fmt.Scan(&nomorMenu)
 	if nomorMenu == 1 {
@@ -76,10 +77,6 @@ func adminMenu() {
 	} else if nomorMenu == 5 {
 		daftarKelulusan()
 	} else if nomorMenu == 6 {
-		ubahDataPeserta()
-	} else if nomorMenu == 7 {
-		hapusDataPeserta()
-	} else if nomorMenu == 8 {
 		menuUtama()
 	} else {
 		adminMenu()
@@ -121,7 +118,7 @@ func hapusDataPeserta() {
 	for i := 0; i < nextIndex; i++ {
 		if data[i].email == email {
 			indexToDelete = i
-			break
+			i = nextIndex
 		}
 	}
 
@@ -142,25 +139,54 @@ func hapusDataPeserta() {
 }
 
 func tambahListPelatihan() {
-	var n int
-	fmt.Print("BANYAK PELATIHAN YANG MAU DITAMBAH : ")
-	fmt.Scan(&n)
-	for i := 0; i < n; i++ {
-		fmt.Printf("PELATIHAN KE-%d : \n", i+1)
-		fmt.Print("Nama Pelatihan: ")
-		fmt.Scan(&pelatihan[jumlahPelatihan].nama)
-		fmt.Print("Deskripsi: ")
-		fmt.Scan(&pelatihan[jumlahPelatihan].deskripsi)
-		fmt.Print("Tanggal Pelatihan: ")
-		fmt.Scan(&pelatihan[jumlahPelatihan].tanggal)
-		fmt.Print("Kuota Peserta: ")
-		fmt.Scan(&pelatihan[jumlahPelatihan].kuotaPeserta)
-		fmt.Println()
-		jumlahPelatihan++
+	var n, nomor int
+	// Tampilkan daftar pelatihan yang baru ditambahkan
+	fmt.Println("\nDaftar Pelatihan:")
+	for i := 0; i < jumlahPelatihan; i++ {
+		if pelatihan[i].nama != "" {
+			fmt.Printf("%d. Nama Pelatihan : %s \nDeskripsi : %s\nTanggal Pelatihan : %s\nKuota : %d\n\n",
+				i+1,
+				pelatihan[i].nama,
+				pelatihan[i].deskripsi,
+				pelatihan[i].tanggal,
+				pelatihan[i].kuotaPeserta)
+		}
 	}
-	fmt.Print("BERHASIL DITAMBAHKAN")
 	fmt.Println()
-	adminMenu()
+	fmt.Print("1. TAMBAH PELATIHAN\n2. EDIT PELATIHAN\n3. HAPUS PELATIHAN\n4. KEMBALI\n\nPILIH NOMOR : ")
+	fmt.Scan(&nomor)
+	if nomor == 1 {
+
+		fmt.Print("BANYAK PELATIHAN YANG MAU DITAMBAH : ")
+		fmt.Scan(&n)
+		for i := 0; i < n; i++ {
+			fmt.Printf("PELATIHAN KE-%d : \n", i+1)
+			fmt.Print("Nama Pelatihan: ")
+			fmt.Scan(&pelatihan[jumlahPelatihan].nama)
+			fmt.Print("Deskripsi: ")
+			fmt.Scan(&pelatihan[jumlahPelatihan].deskripsi)
+			fmt.Print("Tanggal Pelatihan: ")
+			fmt.Scan(&pelatihan[jumlahPelatihan].tanggal)
+			fmt.Print("Kuota Peserta: ")
+			fmt.Scan(&pelatihan[jumlahPelatihan].kuotaPeserta)
+			fmt.Println()
+			jumlahPelatihan++
+		}
+		fmt.Print("BERHASIL DITAMBAHKAN")
+		fmt.Println()
+	} else if nomor == 2 {
+		editPelatihan()
+
+	} else if nomor == 3 {
+		hapusPelatihan()
+
+	} else if nomor == 4 {
+		adminMenu()
+	} else {
+		tambahListPelatihan()
+	}
+	tambahListPelatihan()
+
 }
 
 func rankingNilai() {
@@ -233,19 +259,37 @@ func menuPeserta() {
 }
 
 func tampilkanDataPeserta() {
+	var nomor int
 	fmt.Printf("------------------------------------------------------------\n                        DATA PESERTA\n------------------------------------------------------------\n")
 
 	// Cek apakah ada data peserta yang terdaftar
 	if nextIndex == 0 {
 		fmt.Println("Belum ada data peserta yang terdaftar.")
+		fmt.Println()
+		fmt.Print("Ketik 0 untuk kembali ke menu admin: ")
+		fmt.Scan(&nomor)
+		if nomor == 0 {
+			adminMenu()
+		}
 	} else {
 		// Tampilkan data peserta jika ada
 		for i := 0; i < nextIndex; i++ {
-			fmt.Printf("No. %d\nNama: %s\nEmail: %s\n", i+1, data[i].nama, data[i].email)
+			fmt.Printf("No. %d\nNama: %s\nEmail: %s\nPassword: %s\n", i+1, data[i].nama, data[i].email, data[i].pass)
+		}
+		fmt.Printf("1. EDIT\n2. HAPUS\n3. KEMBALI\n\nPILIH NOMOR: ")
+		fmt.Scan(&nomor)
+		if nomor == 1 {
+			ubahDataPeserta()
+		} else if nomor == 2 {
+			hapusDataPeserta()
+		} else if nomor == 3 {
+			adminMenu()
+		} else {
+			tampilkanDataPeserta()
 		}
 	}
 
-	adminMenu()
+	//adminMenu()
 }
 
 func menuSignUp() {
@@ -367,6 +411,7 @@ func menuPelatihan(nomor int) {
 	fmt.Scan(&pilihan)
 
 	if pilihan == 1 {
+
 		formDaftarPelatihan(nomor) // Panggil fungsi formDaftarPelatihan
 	} else if pilihan == 2 {
 		dashboard() // Kembali ke dashboard
@@ -386,8 +431,8 @@ func formDaftarPelatihan(nomor int) {
 	// Check if email is valid (ends with @gmail.com)
 	if !isValidEmail(p.email) {
 		fmt.Println("Email tidak valid. Pastikan email diakhiri dengan @gmail.com")
-		menuPelatihan(nomor) // Return to the pelatihan menu
-		return
+		formDaftarPelatihan(nomor) // Return to the pelatihan menu
+
 	}
 
 	fmt.Print("Pekerjaan: ")
@@ -401,7 +446,9 @@ func formDaftarPelatihan(nomor int) {
 	for i := 0; i < jumlahPendaftaran; i++ {
 		if pendaftaran[i].email == p.email {
 			count++
+
 		}
+
 	}
 	if count >= pelatihan[nomor-1].kuotaPeserta {
 		fmt.Println("Kuota peserta telah penuh.")
@@ -413,10 +460,11 @@ func formDaftarPelatihan(nomor int) {
 	p.id = nextIdPendaftaran
 	nextIdPendaftaran++ // Tambahkan nomor ID untuk pendaftar berikutnya
 
-	// Tambahkan data pendaftaran ke array (tanpa append)
+	// Tambahkan data pendaftaran ke array
+	p.pelatihan = pelatihan[nomor-1].nama // Tambahkan nama pelatihan ke dalam Pendaftaran
 	pendaftaran[jumlahPendaftaran] = p
 	jumlahPendaftaran++
-
+	pelatihan[nomor-1].kuotaPeserta-- //kurangi kuota untuk ditampilkan
 	fmt.Print("Pendaftaran Berhasil")
 	fmt.Println()
 	dashboard()
@@ -425,23 +473,42 @@ func formDaftarPelatihan(nomor int) {
 func status() {
 	fmt.Printf("------------------------------------------------------------\n                        STATUS\n------------------------------------------------------------\n")
 
-	// 	Tampilkan nilai hasil evaluasi dari email peserta yang sedang login
-	fmt.Println("\nNilai Anda:")
+	// Check if the user is logged in
+	if loggedInUserIndex == -1 {
+		fmt.Println("Anda belum login.")
+		dashboard()
+		return
+	}
+
+	// Find the registration data for the logged-in user's email
+
+	fmt.Println("\nPelatihan yang Anda Ikuti:")
 	for i := 0; i < jumlahPendaftaran; i++ {
 		if pendaftaran[i].email == data[loggedInUserIndex].email {
+			// Find the corresponding training name based on the registration ID
+			for j := 0; j < jumlahPelatihan; j++ {
+				if pelatihan[j].nama != "" && pelatihan[j].nama == pendaftaran[i].pelatihan {
+					fmt.Printf("%s\n", pelatihan[j].nama)
+
+					break
+				}
+			}
+
 			fmt.Printf("Nilai: %d\n", pendaftaran[i].nilai)
-			fmt.Printf("Status: %s\n", pendaftaran[i].status)
-			break
+			fmt.Printf("Status: %s\n\n", pendaftaran[i].status) // Added a newline here
 		}
 	}
+
+	// If no matching registration is found, display a message
 
 	fmt.Println()
 	dashboard()
 }
-
 func lihatPendaftaran() {
-	fmt.Printf("------------------------------------------------------------\n                        DAFTAR PENDAFTARAN\n------------------------------------------------------------\n")
-
+	fmt.Printf("------------------------------------------------------------\n                        DAFTAR DATA IKUT PELATIHAN\n------------------------------------------------------------\n")
+	var status string
+	var nilai int
+	var nomor int
 	// Cek apakah ada data pendaftaran
 	if jumlahPendaftaran == 0 {
 		fmt.Println("Belum ada yang daftar pelatihan.")
@@ -458,76 +525,47 @@ func lihatPendaftaran() {
 		fmt.Printf("Alasan Mengikuti: %s\n", pendaftaran[i].alasanMengikuti)
 		fmt.Printf("Nilai: %d\n", pendaftaran[i].nilai)
 		fmt.Printf("Status: %s\n", pendaftaran[i].status)
+
+		// Tampilkan nama pelatihan yang diikuti
+		fmt.Printf("Pelatihan: %s\n\n", pendaftaran[i].pelatihan)
 	}
 
 	fmt.Println()
 	var idPeserta int
-	fmt.Print("Masukkan ID Peserta untuk menilai: ")
-	fmt.Scan(&idPeserta)
+	fmt.Printf("1. INPUT/EDIT NILAI\n2. HAPUS PESERTA PELATIHAN\n3. KEMBALI\n\nPILIH NOMOR : ")
+	fmt.Scan(&nomor)
+	if nomor == 1 {
 
-	// Cari ID Peserta
-	for i := 0; i < jumlahPendaftaran; i++ {
-		if pendaftaran[i].id == idPeserta {
-			fmt.Print("Masukkan nilai (0-100): ")
-			var nilai int
-			fmt.Scan(&nilai)
-			fmt.Print("Masukkan status (Lulus/Tidak Lulus): ")
-			var status string
-			fmt.Scan(&status)
-			pendaftaran[i].nilai = nilai
-			pendaftaran[i].status = status
-			fmt.Println("Data dinilai!")
-			adminMenu()
-			return
+		fmt.Print("Masukkan ID Peserta untuk menilai: ")
+		fmt.Scan(&idPeserta)
+
+		// Cari ID Peserta
+		for i := 0; i < jumlahPendaftaran; i++ {
+			if pendaftaran[i].id == idPeserta {
+				fmt.Print("Masukkan nilai (0-100): ")
+
+				fmt.Scan(&nilai)
+				fmt.Print("Masukkan status (Lulus/gagal): ")
+
+				fmt.Scan(&status)
+				pendaftaran[i].nilai = nilai
+				pendaftaran[i].status = status
+				fmt.Println("Data dinilai!")
+				lihatPendaftaran()
+				return
+			}
 		}
-	}
 
-	fmt.Println("ID Peserta tidak valid. Sila coba lagi.")
-	lihatPendaftaran() // Kembali ke menu lihat pendaftaran jika ID peserta tidak valid
-}
-
-func rankingNilaiPeserta() {
-	fmt.Printf("------------------------------------------------------------\n                        RANKING NILAI\n------------------------------------------------------------\n")
-
-	// Buat array untuk menyimpan data peserta dan nilainya
-	var ranking [NMAX]struct {
-		email string
-		nilai int
-	}
-
-	// Copy data peserta dan nilainya ke array ranking
-	for i := 0; i < jumlahPendaftaran; i++ {
-		ranking[i].email = pendaftaran[i].email
-		ranking[i].nilai = pendaftaran[i].nilai
-	}
-
-	// Urutkan array ranking menggunakan insertion sort
-	for i := 1; i < jumlahPendaftaran; i++ {
-		key := ranking[i]
-		j := i - 1
-		for j >= 0 && ranking[j].nilai < key.nilai {
-			ranking[j+1] = ranking[j]
-			j--
-		}
-		ranking[j+1] = key
-	}
-
-	// Tampilkan ranking nilai
-	for i := 0; i < jumlahPendaftaran; i++ {
-		fmt.Printf("Rank %d: %s - Nilai: %d\n", i+1, ranking[i].email, ranking[i].nilai)
-	}
-
-	fmt.Println()
-	fmt.Print("Ketik 0 untuk kembali ke menu admin: ")
-	var kembali int
-	fmt.Scan(&kembali)
-	if kembali == 0 {
-		adminMenu() // Kembali ke menu admin setelah menampilkan ranking nilai
+		fmt.Println("ID Peserta tidak valid. Sila coba lagi.")
+	} else if nomor == 2 {
+		hapusPesertaPendaftaran()
+	} else if nomor == 3 {
+		adminMenu()
 	} else {
-		rankingNilai() // Kembali ke fungsi rankingNilai jika nomor yang dimasukkan bukan 0
+		lihatPendaftaran()
 	}
-}
 
+}
 func cekLogin(emailLogin, passLogin string) bool {
 	for i := 0; i < nextIndex; i++ {
 		if emailLogin == data[i].email && (passLogin == data[i].pass || passLogin == "") {
@@ -552,18 +590,95 @@ func isValidEmail(email string) bool {
 	return true
 }
 
-func isValidPhoneNumber(phoneNumber string) bool {
-	if len(phoneNumber) < 11 || len(phoneNumber) > 12 {
-		return false
+func hapusPelatihan() {
+	fmt.Printf("------------------------------------------------------------\n                        HAPUS PELATIHAN\n------------------------------------------------------------\n")
+	if jumlahPelatihan == 0 {
+		fmt.Println("Belum ada pelatihan yang terdaftar.")
+		adminMenu()
+		return
+	}
+	var nomor int
+	fmt.Print("Masukkan nomor pelatihan yang ingin dihapus: ")
+	fmt.Scan(&nomor)
+
+	if nomor < 1 || nomor > jumlahPelatihan {
+		fmt.Println("Nomor pelatihan tidak valid.")
+		hapusPelatihan()
+		return
 	}
 
-	for i := 0; i < len(phoneNumber); i++ {
-		if phoneNumber[i] < '0' || phoneNumber[i] > '9' {
-			return false
+	// Hapus pelatihan dengan menggeser data ke kiri
+	for i := nomor - 1; i < jumlahPelatihan-1; i++ {
+		pelatihan[i] = pelatihan[i+1]
+	}
+	jumlahPelatihan--
+	fmt.Println("Pelatihan berhasil dihapus!")
+	adminMenu()
+}
+
+func editPelatihan() {
+	fmt.Printf("------------------------------------------------------------\n                        EDIT PELATIHAN\n------------------------------------------------------------\n")
+	if jumlahPelatihan == 0 {
+		fmt.Println("Belum ada pelatihan yang terdaftar.")
+		adminMenu()
+		return
+	}
+	var nomor int
+	fmt.Print("Masukkan nomor pelatihan yang ingin diedit: ")
+	fmt.Scan(&nomor)
+
+	if nomor < 1 || nomor > jumlahPelatihan {
+		fmt.Println("Nomor pelatihan tidak valid.")
+		editPelatihan()
+		return
+	}
+
+	// Edit pelatihan
+	fmt.Print("Nama Pelatihan baru: ")
+	fmt.Scan(&pelatihan[nomor-1].nama)
+	fmt.Print("Deskripsi baru: ")
+	fmt.Scan(&pelatihan[nomor-1].deskripsi)
+	fmt.Print("Tanggal Pelatihan baru: ")
+	fmt.Scan(&pelatihan[nomor-1].tanggal)
+	fmt.Print("Kuota Peserta baru: ")
+	fmt.Scan(&pelatihan[nomor-1].kuotaPeserta)
+	fmt.Println("Data pelatihan berhasil diubah!")
+	adminMenu()
+}
+
+func hapusPesertaPendaftaran() {
+	fmt.Printf("------------------------------------------------------------\n                        HAPUS PESERTA PENDAFTARAN\n------------------------------------------------------------\n")
+	if jumlahPendaftaran == 0 {
+		fmt.Println("Belum ada peserta yang terdaftar.")
+		adminMenu()
+		return
+	}
+	var idPeserta int
+	fmt.Print("Masukkan ID peserta yang ingin dihapus dari pendaftaran: ")
+	fmt.Scan(&idPeserta)
+
+	// Cari ID Peserta
+	indexToDelete := -1
+	for i := 0; i < jumlahPendaftaran; i++ {
+		if pendaftaran[i].id == idPeserta {
+			indexToDelete = i
+			i = jumlahPendaftaran
 		}
 	}
 
-	return true
+	if indexToDelete == -1 {
+		fmt.Println("ID Peserta tidak ditemukan.")
+		hapusPesertaPendaftaran()
+		return
+	}
+
+	// Hapus peserta dengan menggeser data ke kiri
+	for i := indexToDelete; i < jumlahPendaftaran-1; i++ {
+		pendaftaran[i] = pendaftaran[i+1]
+	}
+	jumlahPendaftaran--
+	fmt.Println("Peserta berhasil dihapus dari pendaftaran!")
+	adminMenu()
 }
 
 func main() {
